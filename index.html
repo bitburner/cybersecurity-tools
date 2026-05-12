@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber / OSINT Launchpad</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-info: #e6f1fb;
+    --bg-warning: #faeeda;
+    --text: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #888780;
+    --text-info: #185fa5;
+    --text-warning: #ba7517;
+    --border: rgba(0,0,0,0.12);
+    --border-secondary: rgba(0,0,0,0.22);
+    --border-info: #85b7eb;
+    --border-warning: #fac775;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg-secondary: #2a2a28;
+      --bg-info: #042c53;
+      --bg-warning: #412402;
+      --text: #f0ede8;
+      --text-secondary: #b4b2a9;
+      --text-tertiary: #888780;
+      --text-info: #85b7eb;
+      --text-warning: #fac775;
+      --border: rgba(255,255,255,0.1);
+      --border-secondary: rgba(255,255,255,0.2);
+      --border-info: #185fa5;
+      --border-warning: #854f0b;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+
+  .lp-wrap { max-width: 960px; margin: 0 auto; }
+
+  .lp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;
+  }
+
+  .lp-title {
+    font-size: 20px; font-weight: 500; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .lp-title i { font-size: 20px; color: var(--text-info); }
+
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius-md); padding: 7px 12px;
+    flex: 1; max-width: 300px;
+  }
+
+  .search-bar i { color: var(--text-tertiary); font-size: 16px; }
+
+  .search-bar input {
+    border: none; background: transparent; outline: none;
+    font-size: 14px; color: var(--text); width: 100%;
+  }
+
+  .search-bar input::placeholder { color: var(--text-tertiary); }
+
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+  .filter-btn {
+    border: 0.5px solid var(--border); background: var(--bg);
+    color: var(--text-secondary); border-radius: 999px;
+    padding: 4px 13px; font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+
+  .filter-btn:hover { border-color: var(--border-secondary); color: var(--text); }
+  .filter-btn.active {
+    background: var(--bg-info); color: var(--text-info);
+    border-color: var(--border-info);
+  }
+
+  .section { margin-bottom: 1.5rem; }
+
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: 8px; padding: 0 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .count-badge {
+    font-size: 11px; background: var(--bg-secondary);
+    color: var(--text-tertiary); border-radius: 999px;
+    padding: 1px 7px; font-weight: 400; letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .pin-label { color: var(--text-warning); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+
+  .tool-card {
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 12px;
+    cursor: default; position: relative; transition: border-color .15s;
+    display: flex; flex-direction: column;
+  }
+
+  .tool-card:hover { border-color: var(--border-secondary); }
+
+  .tool-card.pinned {
+    border-color: var(--border-warning);
+    background: var(--bg-warning);
+  }
+
+  .cat-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; margin-bottom: 8px; flex-shrink: 0;
+  }
+
+  .tool-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    margin-bottom: 3px; line-height: 1.3;
+  }
+
+  .tool-desc {
+    font-size: 11px; color: var(--text-secondary);
+    line-height: 1.4; flex: 1;
+  }
+
+  .card-actions { display: flex; gap: 4px; margin-top: 10px; }
+
+  .btn-open {
+    flex: 1; font-size: 11px; padding: 5px 8px;
+    border: 0.5px solid var(--border-secondary); border-radius: var(--radius-md);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 4px; transition: background .12s;
+    text-decoration: none;
+  }
+
+  .btn-open:hover { background: var(--bg-secondary); color: var(--text); }
+
+  .btn-pin {
+    font-size: 15px; padding: 5px 7px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-md);
+    background: transparent; cursor: pointer;
+    color: var(--text-tertiary); transition: color .12s;
+  }
+
+  .btn-pin:hover { color: var(--text-warning); }
+  .tool-card.pinned .btn-pin { color: var(--text-warning); }
+
+  .empty {
+    padding: 2rem; text-align: center; color: var(--text-secondary);
+    font-size: 13px; border: 0.5px dashed var(--border);
+    border-radius: var(--radius-lg); background: var(--bg);
+  }
+
+  .empty i { font-size: 28px; display: block; margin-bottom: 8px; opacity: .35; }
+
+  .divider {
+    border: none; border-top: 0.5px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+<div class="lp-wrap">
+
+  <div class="lp-header">
+    <div class="lp-title">
+      <i class="ti ti-shield-lock"></i>
+      Cyber / OSINT Launchpad
+    </div>
+    <div class="search-bar">
+      <i class="ti ti-search"></i>
+      <input type="text" id="searchInput" placeholder="Search tools..." aria-label="Search tools">
+    </div>
+  </div>
+
+  <div class="filter-row" id="filterRow"></div>
+
+  <div id="pinnedSection" style="display:none">
+    <div class="section-label pin-label">
+      <i class="ti ti-star-filled" style="font-size:12px"></i>
+      Pinned <span class="count-badge" id="pinCount">0</span>
+    </div>
+    <div class="grid" id="pinnedGrid"></div>
+    <hr class="divider" style="margin-top:1.25rem">
+  </div>
+
+  <div id="mainContent"></div>
+
+</div>
+
+<script>
+const CAT_COLORS = {
+  "IP & Reputation":          "#BA7517",
+  "DNS & Domain":             "#185FA5",
+  "Malware & Sandbox":        "#A32D2D",
+  "Threat Intel":             "#533AB7",
+  "Recon & Attack Surface":   "#0F6E56",
+  "Breach & Exposure":        "#993556",
+  "Encode / Decode":          "#3B6D11",
+  "Frameworks & Reference":   "#5F5E5A",
+};
+
+const TOOLS = [
+  {id:1,  name:"IP-Info",           url:"https://ipinfo.io",                          cat:"IP & Reputation",        desc:"IP geolocation, ASN & org lookup"},
+  {id:2,  name:"AbuseIPDB",         url:"https://www.abuseipdb.com",                  cat:"IP & Reputation",        desc:"Community IP abuse reports & scoring"},
+  {id:3,  name:"GreyNoise",         url:"https://viz.greynoise.io",                   cat:"IP & Reputation",        desc:"Classify IPs as internet noise vs. targeted"},
+  {id:4,  name:"Cisco Talos",       url:"https://talosintelligence.com",              cat:"IP & Reputation",        desc:"IP/domain reputation & email sender scoring"},
+  {id:5,  name:"Shodan",            url:"https://shodan.io",                          cat:"Recon & Attack Surface", desc:"Search engine for internet-connected devices"},
+  {id:6,  name:"Censys",            url:"https://search.censys.io",                   cat:"Recon & Attack Surface", desc:"Attack surface & certificate scanning"},
+  {id:7,  name:"SecurityTrails",    url:"https://securitytrails.com",                 cat:"DNS & Domain",           desc:"Historical DNS, WHOIS & subdomain data"},
+  {id:8,  name:"MX Toolbox",        url:"https://mxtoolbox.com",                      cat:"DNS & Domain",           desc:"DNS, MX, blacklist & mail diagnostics"},
+  {id:9,  name:"DNSDumpster",       url:"https://dnsdumpster.com",                    cat:"DNS & Domain",           desc:"DNS recon & domain mapping"},
+  {id:10, name:"crt.sh",            url:"https://crt.sh",                             cat:"DNS & Domain",           desc:"Certificate transparency log search"},
+  {id:11, name:"Phonebook.cz",      url:"https://phonebook.cz",                       cat:"DNS & Domain",           desc:"Subdomain, email & URL dump for a domain"},
+  {id:12, name:"VirusTotal",        url:"https://www.virustotal.com",                 cat:"Malware & Sandbox",      desc:"Multi-AV file, URL & hash analysis"},
+  {id:13, name:"urlscan.io",        url:"https://urlscan.io",                         cat:"Malware & Sandbox",      desc:"Scan & screenshot suspicious URLs"},
+  {id:14, name:"ANY.RUN",           url:"https://any.run",                            cat:"Malware & Sandbox",      desc:"Interactive malware sandbox"},
+  {id:15, name:"Hybrid Analysis",   url:"https://www.hybrid-analysis.com",            cat:"Malware & Sandbox",      desc:"Free malware analysis by CrowdStrike"},
+  {id:16, name:"Joe Sandbox",       url:"https://www.joesandbox.com",                 cat:"Malware & Sandbox",      desc:"Deep file & URL behavioral analysis"},
+  {id:17, name:"OTX AlienVault",    url:"https://otx.alienvault.com",                 cat:"Threat Intel",           desc:"Open threat exchange — IOCs & pulses"},
+  {id:18, name:"OpenPhish",         url:"https://openphish.com",                      cat:"Threat Intel",           desc:"Active phishing URL feed"},
+  {id:19, name:"Spamhaus",          url:"https://check.spamhaus.org",                 cat:"Threat Intel",           desc:"Email, domain & IP blocklist checks"},
+  {id:20, name:"IntelX",            url:"https://intelx.io",                          cat:"Threat Intel",           desc:"Historical & deep web data search"},
+  {id:21, name:"SOCRadar Free",     url:"https://socradar.io/free-edition",           cat:"Threat Intel",           desc:"Free threat intel & dark web monitoring"},
+  {id:22, name:"HIBP",              url:"https://haveibeenpwned.com",                 cat:"Breach & Exposure",      desc:"Email breach & paste exposure check"},
+  {id:23, name:"Dehashed",          url:"https://www.dehashed.com",                   cat:"Breach & Exposure",      desc:"Leaked credential search"},
+  {id:24, name:"LeakCheck",         url:"https://leakcheck.io",                       cat:"Breach & Exposure",      desc:"Email/username breach lookup"},
+  {id:25, name:"CyberChef",         url:"https://gchq.github.io/CyberChef",           cat:"Encode / Decode",        desc:"Encode, decode, transform & analyse data"},
+  {id:26, name:"DCode",             url:"https://www.dcode.fr/en",                    cat:"Encode / Decode",        desc:"Cipher solving & encoding tools"},
+  {id:27, name:"ATT&CK Navigator",  url:"https://mitre-attack.github.io/attack-navigator", cat:"Frameworks & Reference", desc:"Visualize MITRE ATT&CK techniques"},
+  {id:28, name:"OSINT Framework",   url:"https://osintframework.com",                 cat:"Frameworks & Reference", desc:"Categorized directory of OSINT resources"},
+  {id:29, name:"Exploit-DB",        url:"https://www.exploit-db.com",                 cat:"Frameworks & Reference", desc:"Offensive Security exploit & vuln archive"},
+  {id:30, name:"NVD",               url:"https://nvd.nist.gov",                       cat:"Frameworks & Reference", desc:"NIST national vulnerability database"},
+];
+
+const CATS = [...new Set(TOOLS.map(t => t.cat))];
+let pinned = new Set();
+try { pinned = new Set(JSON.parse(localStorage.getItem('lp_pins') || '[]')); } catch(e){}
+let activeCat = 'all';
+let query = '';
+
+function savePins() {
+  try { localStorage.setItem('lp_pins', JSON.stringify([...pinned])); } catch(e){}
+}
+
+function togglePin(id) {
+  if (pinned.has(id)) pinned.delete(id); else pinned.add(id);
+  savePins();
+  render();
+}
+
+function cardHTML(t) {
+  const isPinned = pinned.has(t.id);
+  const dot = CAT_COLORS[t.cat] || '#888';
+  const starIcon = isPinned ? 'ti-star-filled' : 'ti-star';
+  return `
+    <div class="tool-card${isPinned ? ' pinned' : ''}">
+      <span class="cat-dot" style="background:${dot}" title="${t.cat}"></span>
+      <div class="tool-name">${t.name}</div>
+      <div class="tool-desc">${t.desc}</div>
+      <div class="card-actions">
+        <a class="btn-open" href="${t.url}" target="_blank" rel="noopener noreferrer" aria-label="Open ${t.name}">
+          <i class="ti ti-external-link" style="font-size:12px" aria-hidden="true"></i> Open
+        </a>
+        <button class="btn-pin" onclick="togglePin(${t.id})" aria-label="${isPinned ? 'Unpin' : 'Pin'} ${t.name}" title="${isPinned ? 'Unpin' : 'Pin'}">
+          <i class="ti ${starIcon}" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+function render() {
+  const q = query.toLowerCase();
+  const filtered = TOOLS.filter(t => {
+    const matchCat = activeCat === 'all' || t.cat === activeCat;
+    const matchQ = !q || t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  const pinnedTools = filtered.filter(t => pinned.has(t.id));
+  const ps = document.getElementById('pinnedSection');
+  const pg = document.getElementById('pinnedGrid');
+  if (pinnedTools.length) {
+    ps.style.display = 'block';
+    pg.innerHTML = pinnedTools.map(cardHTML).join('');
+    document.getElementById('pinCount').textContent = pinnedTools.length;
+  } else {
+    ps.style.display = 'none';
+  }
+
+  const unpinned = filtered.filter(t => !pinned.has(t.id));
+  const mc = document.getElementById('mainContent');
+
+  if (!unpinned.length && !pinnedTools.length) {
+    mc.innerHTML = '<div class="empty"><i class="ti ti-search-off"></i>No tools match your search</div>';
+    return;
+  }
+
+  if (activeCat !== 'all' || q) {
+    const label = activeCat === 'all' ? 'Results' : activeCat;
+    mc.innerHTML = `<div class="section">
+      <div class="section-label" style="color:${CAT_COLORS[activeCat]||'var(--text-secondary)'}">
+        ${label} <span class="count-badge">${unpinned.length}</span>
+      </div>
+      <div class="grid">${unpinned.map(cardHTML).join('')}</div>
+    </div>`;
+  } else {
+    let html = '';
+    CATS.forEach(cat => {
+      const catTools = unpinned.filter(t => t.cat === cat);
+      if (!catTools.length) return;
+      html += `<div class="section">
+        <div class="section-label" style="color:${CAT_COLORS[cat]}">
+          ${cat} <span class="count-badge">${catTools.length}</span>
+        </div>
+        <div class="grid">${catTools.map(cardHTML).join('')}</div>
+      </div>`;
+    });
+    mc.innerHTML = html;
+  }
+}
+
+function buildFilters() {
+  const fr = document.getElementById('filterRow');
+  const btns = [{ label: 'All', val: 'all' }, ...CATS.map(c => ({ label: c, val: c }))];
+  fr.innerHTML = btns.map(b =>
+    `<button class="filter-btn${b.val === activeCat ? ' active' : ''}" onclick="setFilter('${b.val.replace(/'/g,"\\'")}')">
+      ${b.label}
+    </button>`
+  ).join('');
+}
+
+function setFilter(val) { activeCat = val; buildFilters(); render(); }
+
+document.getElementById('searchInput').addEventListener('input', e => { query = e.target.value; render(); });
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
